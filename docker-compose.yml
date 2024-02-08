@@ -6,7 +6,7 @@ volumes:
 services:
   db:
     image: postgres:13.10
-    container_name: db_app_fastapi
+    container_name: db_bunker
     env_file: .env.docker
     ports:
       - 5432:5432

@@ -1,13 +1,14 @@
 import asyncio
 import base64
 import json
-import time
 import aiohttp
 import requests
 from os import getenv
 from dotenv import load_dotenv
+from app.config import images_dir
 
-load_dotenv('../../.env')
+
+load_dotenv()
 
 API_KEY = getenv('API_KEY')
 SECRET_KEY = getenv('SECRET_KEY')
@@ -33,7 +34,7 @@ class Text2ImageAPI:
         return data[0]['id']
 
     def generate(self,
-                 prompt: str,
+                 prompt: dict,
                  model: int,
                  images: int = 1,
                  width: int = 1024,
@@ -41,6 +42,12 @@ class Text2ImageAPI:
         """Делает запрос на генерацию картинки
             Возврат: uuid - для запросов о состоянии картинки
         """
+        prompt = prompt.copy()
+        prompt.pop('card_1')
+        prompt.pop('card_2')
+        prompt.pop('image')
+        prompt = ', '.join([i for i in prompt.values()])
+
         params = {
             "type": "GENERATE",
             "numImages": images,
@@ -48,8 +55,7 @@ class Text2ImageAPI:
             "height": height,
             "generateParams": {
                 "query": f"{prompt}"
-            },
-            "style": "ANIME"
+            }
         }
         data = {
             'model_id': (None, model),
@@ -59,42 +65,36 @@ class Text2ImageAPI:
         data = response.json()
         return data['uuid']
 
-    async def check_generation(self, uuid, attempts=10):
+    async def check_generation(self, uuid: str, image_name: str) -> None:
         """Запросы проверки состояния генерации по uuid"""
-
+        attempts = 10
         while attempts > 0:
             async with aiohttp.ClientSession(headers=self.AUTH_HEADERS) as session:
                 async with session.get(self.URL + self.status_url + uuid) as response:
                     data = await response.json()
 
             if data['status'] == 'DONE':
-                print('DONE')
                 image_base64 = data['images'][0]
                 image_data = base64.b64decode(image_base64)
 
                 # Открываем файл для записи бинарных данных изображения
                 try:
-                    with open(f"{time.time_ns()}.jpg", "wb") as file:
+                    with open(images_dir + fr"\{image_name}.jpg", "wb") as file:
                         file.write(image_data)
                         return
                 except:
-                    with open(f"images/{time.time_ns()}.jpg", "w+") as file:
-                        file.write(image_data)
-                        return
+                    return
+
             await asyncio.sleep(5)
             attempts += 1
 
 
-api = Text2ImageAPI(API_KEY, SECRET_KEY)
-print(api.__dict__)
-async def main(prompt: str):
+async def run_generate(prompt: dict, image_name: str):
+    api = Text2ImageAPI(API_KEY, SECRET_KEY)
     model = api.get_model()
     uuid = api.generate(prompt, model)
-    await api.check_generation(uuid)
+    await api.check_generation(uuid, image_name)
     return prompt
 
-def run_generate():
-    asyncio.run(main("Море"))
-
-if __name__ == '__main__':
-    run_generate()
+# async def run_generate(prompt: dict, image_name: str):
+#     await main(prompt, image_name)

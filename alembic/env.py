@@ -7,7 +7,11 @@ from alembic import context
 
 from os import getenv
 from dotenv import load_dotenv
-from app.core.database import Base
+from core.database import Base
+from app.users.models import User
+from app.characters.models import Character
+from app.rooms.models import Room
+
 
 load_dotenv()
 
