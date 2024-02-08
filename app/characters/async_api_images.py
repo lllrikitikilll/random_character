@@ -78,7 +78,7 @@ class Text2ImageAPI:
                         file.write(image_data)
                         return
                 except:
-                    with open(f"{time.time_ns()}.jpg", "w+") as file:
+                    with open(f"images/{time.time_ns()}.jpg", "w+") as file:
                         file.write(image_data)
                         return
             await asyncio.sleep(5)
