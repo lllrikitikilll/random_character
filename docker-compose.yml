@@ -1,0 +1,14 @@
+version: '3.7'
+
+volumes:
+  pg_data:
+
+services:
+  db:
+    image: postgres:13.10
+    container_name: db_app_fastapi
+    env_file: .env.docker
+    ports:
+      - 5432:5432
+    volumes:
+            - pg_data:/var/lib/postgresql/data/
