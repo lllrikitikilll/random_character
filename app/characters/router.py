@@ -17,7 +17,7 @@ router = APIRouter(
 async def create_character() -> SCharacter:
     """Создание персонажа"""
 
-    prompt = get_random_characters()
+    prompt = get_random_characters().dict()
     image_name = str(time.time_ns())
     prompt['image'] = image_name
     await run_generate(prompt, image_name)

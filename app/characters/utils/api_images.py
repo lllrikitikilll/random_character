@@ -95,6 +95,3 @@ async def run_generate(prompt: dict, image_name: str):
     uuid = api.generate(prompt, model)
     await api.check_generation(uuid, image_name)
     return prompt
-
-# async def run_generate(prompt: dict, image_name: str):
-#     await main(prompt, image_name)

@@ -1,7 +1,7 @@
 import re
 
 
-def pars_json_character(char: dict):
+def pars_json_character(char: dict) -> dict:
     """Парсит данные о персонаже"""
     pattern = r'^.*?\.\s*'
     data: list = char['msg'].split('\n')
@@ -23,6 +23,8 @@ def pars_json_character(char: dict):
         'card_1': data[10],
         'card_2': data[11],
     }
+
+    dct_data['age_childfree'].replace('бык-осеменитель', 'Да')
 
     return dct_data
 
