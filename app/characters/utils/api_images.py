@@ -13,6 +13,7 @@ load_dotenv()
 API_KEY = getenv('API_KEY')
 SECRET_KEY = getenv('SECRET_KEY')
 
+
 class Text2ImageAPI:
     """API для использования генерации картинок Сбера"""
 
@@ -26,27 +27,35 @@ class Text2ImageAPI:
             'X-Secret': f'Secret {secret_key}',
         }
 
-    def get_model(self):
-        """Возврат: id рабочей модели Сбера"""
-
-        response = requests.get(self.URL + self.model_url, headers=self.AUTH_HEADERS)
-        data = response.json()
-        return data[0]['id']
-
-    def generate(self,
-                 prompt: dict,
-                 model: int,
-                 images: int = 1,
-                 width: int = 1024,
-                 height: int = 1024) -> str:
-        """Делает запрос на генерацию картинки
-            Возврат: uuid - для запросов о состоянии картинки
-        """
+    @staticmethod
+    def delete_other_char_in_prompt(prompt: dict) -> dict:
+        """Удаление лишней информации для генерации"""
         prompt = prompt.copy()
         prompt.pop('card_1')
         prompt.pop('card_2')
         prompt.pop('image')
-        prompt = ', '.join([i for i in prompt.values()])
+        return prompt
+
+    @staticmethod
+    def save_image(image_data: bytes, image_name: str):
+        """Запись сгенерированной картинки"""
+        with open(images_dir + fr"\{image_name}.jpg", "wb") as file:
+            file.write(image_data)
+            return
+
+    def get_model(self) -> int:
+        """Возврат: id рабочей модели Сбера"""
+        response = requests.get(self.URL + self.model_url, headers=self.AUTH_HEADERS)
+        data = response.json()
+        return data[0]['id']
+
+    def generate(self, prompt: dict, model: int, images: int = 1,
+                 width: int = 1024, height: int = 1024) -> str:
+        """Делает запрос на генерацию картинки
+            Возврат: uuid - для запросов о состоянии картинки
+        """
+        prompt = self.delete_other_char_in_prompt(prompt)
+        prompt = ', '.join([i for i in prompt.values()])  # промпт тестом для генерации
 
         params = {
             "type": "GENERATE",
@@ -67,26 +76,20 @@ class Text2ImageAPI:
 
     async def check_generation(self, uuid: str, image_name: str) -> None:
         """Запросы проверки состояния генерации по uuid"""
-        attempts = 10
-        while attempts > 0:
-            async with aiohttp.ClientSession(headers=self.AUTH_HEADERS) as session:
+        attempts = 10  # 10 циклов запросов по 5 секунд
+        async with aiohttp.ClientSession(headers=self.AUTH_HEADERS) as session:
+            while attempts > 0:
                 async with session.get(self.URL + self.status_url + uuid) as response:
                     data = await response.json()
 
-            if data['status'] == 'DONE':
-                image_base64 = data['images'][0]
-                image_data = base64.b64decode(image_base64)
+                if data['status'] == 'DONE':
+                    image_base64 = data['images'][0]
+                    image_data = base64.b64decode(image_base64)
+                    self.save_image(image_data, image_name)
+                    break
 
-                # Открываем файл для записи бинарных данных изображения
-                try:
-                    with open(images_dir + fr"\{image_name}.jpg", "wb") as file:
-                        file.write(image_data)
-                        return
-                except:
-                    return
-
-            await asyncio.sleep(5)
-            attempts += 1
+                await asyncio.sleep(5)
+                attempts -= 1
 
 
 async def run_generate(prompt: dict, image_name: str):

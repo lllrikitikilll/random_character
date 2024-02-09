@@ -1,8 +1,6 @@
-from pprint import pprint
-
 import requests
 from app.characters.utils.character_utils import pars_json_character
-from app.characters.DTO import CharacterDTO
+from app.characters.schemas import CharacterDTO
 
 # 'https://randomall.ru/api/gens/1723'
 # 'https://randomall.ru/api/gens/1762'
@@ -15,5 +13,3 @@ def get_random_characters() -> CharacterDTO:
     response = requests.post(randomiser_character_url)
     data_character = pars_json_character(response.json())
     return CharacterDTO(**data_character)
-
-

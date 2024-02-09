@@ -1,5 +1,5 @@
-from sqlalchemy import String, ForeignKey
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import String
+from sqlalchemy.orm import Mapped, mapped_column
 
 from core.database import Base
 
@@ -22,4 +22,3 @@ class Character(Base):
     card_1: Mapped[str] = mapped_column(String(255))
     card_2: Mapped[str] = mapped_column(String(255))
     image: Mapped[str] = mapped_column(String(255))
-

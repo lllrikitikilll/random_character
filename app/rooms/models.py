@@ -3,6 +3,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from core.database import Base
 
+
 class Room(Base):
     __tablename__ = 'room'
 
